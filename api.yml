@@ -1,0 +1,302 @@
+swagger: '2.0'
+info:
+  x-audience: external-partner
+  x-api-id: f4cffb37-949a-4ddd-be04-432a7e1dbecb
+  title: Tachograph File Archive
+  description: 'Access meta data about about stored tachograph files, download and upload tachograph files'
+  version: '1.1.5'
+  contact:
+    name: Team Compliant
+    email: team_tachograph_remote_download@rio.cloud
+
+x-zally-ignore: [172]
+# SHOULD Prefer standard media type names - is ignored because application/zip is standard
+# Zally only support json for the moment:
+# https://github.com/zalando/zally/blob/master/server/src/main/java/de/zalando/zally/rule/zalando/MediaTypesRule.kt#L34
+
+basePath: /api/tachograph-file-archive
+host: api.iam.ccp-prod.net
+schemes:
+  - https
+
+securityDefinitions:
+  oauth2:
+    type: oauth2
+    tokenUrl: https://auth.iam.rio.cloud/oauth/token
+    flow: application
+    scopes:
+      tachograph-partner.read: Access right to read files and metadata from archive
+      tachograph-partner.write: Access right to upload files
+
+paths:
+  /files:
+    get:
+      summary:
+        Get (paged) file informations or zip of files based on content-header.
+        Results are sorted by file-name ascending.
+      description: |
+        When sending Accept-Header='application/json' API will respond with a description in JSON for the files matching query parameters.
+        When sending Accept-Header='application/zip' API will respond with a compressed file in ZIP format containing all the tachograph files itself matching request paramters.
+
+        # Examples:
+        ## Get all files
+
+        `GET /files`
+
+        ## Get all files between two dates with paging information. `From` and `to` refering to FileMetadataModel::time_created.
+
+        `GET /files?from=2018-07-01T08%3A42%3A05.346Z&to=2018-05-28T08%3A42%3A05.346Z&offset=10&limit=10`
+
+        ## Get Files from driver between two dates. `From` and `to` refering to FileMetadataModel::time_created.
+
+        `GET /files?file_type=driver&from=2018-07-01T08%3A42%3A05.346Z&to=2018-05-28T08%3A42%3A05.346Z`
+
+        ## Get Files relating to specific driver with paging information
+
+        `GET /files?offset=0&limit=10&driver_id=7b290aff-6eab-47a3-9b61-e9f6c9dfc906`
+
+      consumes:
+        - text/plain; charset=utf-8
+      produces:
+        - application/json
+        - application/zip
+      parameters:
+        - $ref: '#/parameters/fleet-id'
+        - $ref: '#/parameters/driver-id'
+        - $ref: '#/parameters/equipment-id'
+        - $ref: '#/parameters/from'
+        - $ref: '#/parameters/to'
+        - $ref: '#/parameters/offset'
+        - $ref: '#/parameters/limit'
+        - $ref: '#/parameters/file-type'
+      security:
+        - oauth2: [tachograph-partner.read]
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: '#/definitions/FileMetadataResponse'
+
+    post:
+      summary: 'Upload a file'
+      description: |
+        # Example:
+
+        ## Upload a file
+        `POST /files?fleet_id=d304220d-430a-42fc-939a-b01c50ceef04&file_name=upload.ddd`
+
+        Body must contain file in binary format
+
+      consumes:
+        - 'application/octet-stream'
+      produces: []
+      parameters:
+        - $ref: '#/parameters/fleet-id-required'
+        - $ref: '#/parameters/file-name'
+        - $ref: '#/parameters/file-content'
+      security:
+        - oauth2: [tachograph-partner.write]
+      responses:
+        '201':
+          description: Success
+
+  /files/{file-id}:
+    get:
+      summary: Get a file itself or file metadata via file-id based on content-type header
+      description: |
+        # Example:
+
+        ## Get file via file ID 148
+
+        `GET /files/148`
+
+      consumes:
+        - text/plain; charset=utf-8
+      produces:
+        - application/json
+        - application/octet-stream
+      parameters:
+        - $ref: '#/parameters/file-id'
+      security:
+        - oauth2: [tachograph-partner.read]
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/FileMetadataResponse'
+
+parameters:
+  file-id:
+    name: file-id
+    in: path
+    description: 'File identification'
+    required: true
+    type: integer
+    format: int32
+  equipment-id:
+    name: equipment_id
+    in: query
+    description: 'Equipment identification'
+    required: false
+    type: string
+  driver-id:
+    name: driver_id
+    in: query
+    description: 'Driver identification'
+    required: false
+    type: string
+  fleet-id:
+    name: fleet_id
+    in: query
+    description: 'Fleet identification'
+    required: false
+    type: string
+  fleet-id-required:
+    name: fleet_id
+    in: query
+    description: 'Fleet identification'
+    required: true
+    type: string
+  from:
+    name: from
+    required: false
+    type: string
+    in: query
+    description: 'UTC value formatted as date-time (see: RFC 3339, section 5.6). Refering to FileMetadataModel::time_created.'
+    format: date-time
+  to:
+    name: to
+    required: false
+    in: query
+    type: string
+    description: 'UTC value formatted as date-time (see: RFC 3339, section 5.6). Refering to FileMetadataModel::time_created.'
+    format: date-time
+  offset:
+    name: offset
+    type: integer
+    format: int32
+    required: false
+    in: query
+    default: 0
+    description: 'Pagination: number of elements to skip'
+  limit:
+    name: limit
+    type: integer
+    format: int32
+    in: query
+    default: 10
+    maximum: 100
+    description: 'Pagination: number of elements on the page'
+    required: false
+  file-content:
+    in: body
+    name: file_content
+    description: 'The raw file'
+    required: true
+    schema:
+      type: string
+      format: byte
+  file-name:
+    name: file_name
+    in: query
+    required: true
+    type: string
+    description: 'Name of the file'
+  file-type:
+    name: file_type
+    in: query
+    type: string
+    description: defines the type of file
+    x-extensible-enum:
+      - unknown
+      - driver
+      - vehicle
+      - workshop
+
+definitions:
+  FileMetadataResponse:
+    type: object
+    properties:
+      items:
+        type: array
+        items:
+          $ref: '#/definitions/FileMetadataModel'
+      count:
+        type: integer
+        format: int32
+        readOnly: true
+      total_count:
+        type: integer
+        format: int32
+        readOnly: true
+      pagination:
+        $ref: '#/definitions/PaginationModel'
+
+  FileMetadataModel:
+    type: object
+    properties:
+      reference_id:
+        type: string
+        format: uuid
+        description: In case of file_type driver this is the driverId, when file_type vehicle this is the vehicle id / asset  id, for other cases this is empty
+      file_id:
+        type: integer
+        format: int32
+        description: File identification. Globally unique.
+      customer_id:
+        type: string
+        description: Customer id
+      file_name:
+        type: string
+        description: File name
+      size:
+        type: integer
+        format: int32
+        description: File size
+      file_type:
+        type: string
+        description: File type
+        x-extensible-enum:
+          - unknown
+          - driver
+          - vehicle
+          - workshop
+      has_sections_valid:
+        type: boolean
+        description: Has sections valid
+      is_corrupted:
+        type: boolean
+        description: Is corrupted
+      time_created:
+        type: string
+        format: date-time
+        description: 'UTC value formatted as date-time (see: RFC 3339, section 5.6)'
+      time_modified:
+        type: string
+        format: date-time
+        description: 'UTC value formatted as date-time (see: RFC 3339, section 5.6)'
+      created_by:
+        type: string
+        description: 'Created by'
+      modified_by:
+        type: string
+        description: 'Last modified by'
+    description: Tachograph File Metadata Response
+
+  PaginationModel:
+    type: object
+    properties:
+      offset:
+        type: integer
+        format: int32
+        readOnly: true
+      limit:
+        type: integer
+        format: int32
+        readOnly: true
+      previous:
+        type: string
+        readOnly: true
+      next:
+        type: string
+        readOnly: true
