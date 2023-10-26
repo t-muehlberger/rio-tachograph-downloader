@@ -53,10 +53,12 @@ func NewGetFilesFileIDParamsWithHTTPClient(client *http.Client) *GetFilesFileIDP
 	}
 }
 
-/* GetFilesFileIDParams contains all the parameters to send to the API endpoint
-   for the get files file ID operation.
+/*
+GetFilesFileIDParams contains all the parameters to send to the API endpoint
 
-   Typically these are written to a http.Request.
+	for the get files file ID operation.
+
+	Typically these are written to a http.Request.
 */
 type GetFilesFileIDParams struct {
 

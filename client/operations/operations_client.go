@@ -40,9 +40,10 @@ type ClientService interface {
 }
 
 /*
-  GetFiles gets paged file informations or zip of files based on content header results are sorted by file name ascending
+	GetFiles gets paged file informations or zip of files based on content header results are sorted by file name ascending
 
-  When sending Accept-Header='application/json' API will respond with a description in JSON for the files matching query parameters.
+	When sending Accept-Header='application/json' API will respond with a description in JSON for the files matching query parameters.
+
 When sending Accept-Header='application/zip' API will respond with a compressed file in ZIP format containing all the tachograph files itself matching request paramters.
 
 # Examples:
@@ -61,7 +62,6 @@ When sending Accept-Header='application/zip' API will respond with a compressed 
 ## Get Files relating to specific driver with paging information
 
 `GET /files?offset=0&limit=10&driver_id=7b290aff-6eab-47a3-9b61-e9f6c9dfc906`
-
 */
 func (a *Client) GetFiles(params *GetFilesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetFilesOK, error) {
 	// TODO: Validate the params before sending
@@ -100,14 +100,13 @@ func (a *Client) GetFiles(params *GetFilesParams, authInfo runtime.ClientAuthInf
 }
 
 /*
-  GetFilesFileID gets a file itself or file metadata via file id based on content type header
+	GetFilesFileID gets a file itself or file metadata via file id based on content type header
 
-  # Example:
+	# Example:
 
 ## Get file via file ID 148
 
 `GET /files/148`
-
 */
 func (a *Client) GetFilesFileID(params *GetFilesFileIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetFilesFileIDOK, error) {
 	// TODO: Validate the params before sending
@@ -146,15 +145,14 @@ func (a *Client) GetFilesFileID(params *GetFilesFileIDParams, authInfo runtime.C
 }
 
 /*
-  PostFiles uploads a file
+	PostFiles uploads a file
 
-  # Example:
+	# Example:
 
 ## Upload a file
 `POST /files?fleet_id=d304220d-430a-42fc-939a-b01c50ceef04&file_name=upload.ddd`
 
 Body must contain file in binary format
-
 */
 func (a *Client) PostFiles(params *PostFilesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostFilesCreated, error) {
 	// TODO: Validate the params before sending

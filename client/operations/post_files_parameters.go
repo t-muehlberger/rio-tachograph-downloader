@@ -52,10 +52,12 @@ func NewPostFilesParamsWithHTTPClient(client *http.Client) *PostFilesParams {
 	}
 }
 
-/* PostFilesParams contains all the parameters to send to the API endpoint
-   for the post files operation.
+/*
+PostFilesParams contains all the parameters to send to the API endpoint
 
-   Typically these are written to a http.Request.
+	for the post files operation.
+
+	Typically these are written to a http.Request.
 */
 type PostFilesParams struct {
 
